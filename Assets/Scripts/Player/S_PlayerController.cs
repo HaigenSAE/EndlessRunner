@@ -7,7 +7,6 @@ using UnityEngine;
 [RequireComponent(typeof(Animator))]
 public class S_PlayerController : MonoBehaviour
 {
-    public float moveSpeed = 3;
     public float speedMultiplier = 1.0f;
     public float score;
     public float jumpForce = 10;
@@ -17,9 +16,10 @@ public class S_PlayerController : MonoBehaviour
     [SerializeField] private LayerMask groundLM;
     [SerializeField] private Transform groundCheckPos;
     [SerializeField] private bool isGrounded;
+	[SerializeField] private bool invincible;
 
     private float groundRad = 0.15f;
-    private Rigidbody2D rb;
+	private Rigidbody2D rb;
     private Collider2D col2D;
     private Animator anim;
     private GameManager gm;
@@ -34,12 +34,15 @@ public class S_PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
-        //reset jump anim trigger
-        anim.ResetTrigger("jumped");
+
+		anim.SetFloat("vertMotion", rb.velocity.y);
+	
         //ground checking
         if(Physics2D.OverlapCircle(groundCheckPos.position, 0.1f, groundLM))
         {
             isGrounded = true;
+			//reset jump anim trigger
+			anim.ResetTrigger("jumped");
             anim.SetBool("isInAir", false);
         }
         else
@@ -49,31 +52,29 @@ public class S_PlayerController : MonoBehaviour
 
         if(canMove)
         {
-            rb.velocity = new Vector2(moveSpeed * speedMultiplier, rb.velocity.y);
-
+			if(rb.velocity.y < -0.01)
+			{
+				anim.SetBool("isInAir", true);
+			}
+			
             if(isGrounded)
             {
                 //Jump if on ground
                 if (Input.GetButtonDown("Jump") || Input.touchCount > 0)
                 {
-                    rb.velocity = new Vector2(rb.velocity.x, jumpForce);
-                    isGrounded = false;
                     anim.SetTrigger("jumped");
-                    anim.SetBool("isInAir", true);
+					isGrounded = false;
                 }
             }
-            else
-            {
-                anim.SetBool("isInAir", true);
-            }
-            
+			anim.SetFloat("Speed", gm.gameSpeed * 2);			
         }
         else
         {
             //Stop moving
             rb.velocity = Vector2.zero;
+			anim.SetFloat("Speed", 0);
         }
-        anim.SetFloat("Speed", Mathf.Abs(rb.velocity.x));
+        
 
     }
 
@@ -83,14 +84,17 @@ public class S_PlayerController : MonoBehaviour
         switch (col.gameObject.tag)
         {
             case "Obstacle":
-                lives--;
-                gm.UpdateLives();
-                if(lives <= 0)
-                {
-                    gm.ShowEndScreen();
-                    canMove = false;
-                }
-                Destroy(col.gameObject);
+				if(!invincible)
+				{
+					lives--;
+					gm.UpdateLives();
+					if(lives <= 0)
+					{
+						gm.ShowEndScreen();
+						canMove = false;
+					}
+					Destroy(col.gameObject);
+				} 
                 break;
             case "KillZone":
                 gm.RestartGame();
@@ -98,13 +102,18 @@ public class S_PlayerController : MonoBehaviour
             case "Pickup":
                 score++;
                 //check if speed should increase every 10 score
-                if(score % 10 == 0)
+                if(score % 2 == 0)
                 {
-                    speedMultiplier = score / 10 * 0.1f + 1;
+                    gm.gameSpeed = score / 2 * 0.5f + 1;
                 }
                 gm.scoreText.text = "SCORE: " + score;
                 Destroy(col.gameObject);
                 break;
         }
     }
+	
+	public void Jump()
+	{
+		rb.velocity = new Vector2(rb.velocity.x, jumpForce);   
+	}
 }

@@ -4,11 +4,13 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.SceneManagement;
 
+
 public class GameManager : MonoBehaviour
 {
     public Text scoreText;
     public Image life1, life2, life3;
     public Sprite lifeOn, lifeOff;
+	public float gameSpeed = 1;
 
     [SerializeField] private Button startButton, quitButton, retryButton;
     [SerializeField] private GameObject gameOverObj;

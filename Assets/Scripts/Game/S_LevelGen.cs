@@ -5,8 +5,9 @@ using UnityEngine;
 public class S_LevelGen : MonoBehaviour
 {
     [SerializeField] private Transform genPoint;
-    [SerializeField] private GameObject floorPrefab, bgPrefab, obsPrefab, pickupPrefab;
-    [SerializeField] private float floorOffset, dist;
+    [SerializeField] private GameObject floorPrefab, bgBuildingPrefab, bgSkyPrefab, obsPrefab, pickupPrefab;
+    [SerializeField] private GameObject lastFloor, lastBuildingBG, lastSkyBG;	
+    [SerializeField] private float floorOffset;
 
     private bool canSpawn = true;
     private float width;
@@ -16,18 +17,21 @@ public class S_LevelGen : MonoBehaviour
     void Start()
     {
         //Obtain width for spawning dist
-        width = floorPrefab.GetComponent<SpriteRenderer>().size.x;
+        width = 1.2f;
+		lastBuildingBG = gameObject;
+		lastFloor = gameObject;
+		lastSkyBG = gameObject;
+		SpawnFloor();
+		SpawnBuildingBG();
+		SpawnSkyBG();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if(transform.position.x < genPoint.position.x)
+        if(lastFloor.transform.position.x < genPoint.position.x)
         {
-            transform.position = new Vector2(transform.position.x + width + dist, transform.position.y);
-            Instantiate(floorPrefab, new Vector2(transform.position.x, transform.position.y + floorOffset), transform.rotation);
-            Instantiate(bgPrefab, transform.position, transform.rotation);
-
+			SpawnFloor();
             //randomly spawn obstacles and pickups
             if(canSpawn)
             {
@@ -44,18 +48,41 @@ public class S_LevelGen : MonoBehaviour
                 }
             }
         }
+		if(lastBuildingBG.transform.position.x < genPoint.position.x)
+		{
+			SpawnBuildingBG();
+		}
+		if(lastSkyBG.transform.position.x < genPoint.position.x)
+		{
+			SpawnSkyBG();
+		}
     }
+	
+	private void SpawnFloor()
+	{
+		lastFloor = Instantiate(floorPrefab, new Vector2(lastFloor.transform.position.x + width, transform.position.y + floorOffset), transform.rotation);
+	}
+	
+	private void SpawnBuildingBG()
+	{
+		lastBuildingBG = Instantiate(bgBuildingPrefab, new Vector3(lastBuildingBG.transform.position.x + width, transform.position.y, 10), transform.rotation);
+	}
+	
+	private void SpawnSkyBG()
+	{
+		lastSkyBG = Instantiate(bgSkyPrefab, new Vector3(lastSkyBG.transform.position.x + width, transform.position.y, 15), transform.rotation);
+	}
 
     IEnumerator SpawnObs()
     {
-        Instantiate(obsPrefab, new Vector2(transform.position.x, transform.position.y + floorOffset + 0.08f), transform.rotation);
+        Instantiate(obsPrefab, new Vector2(lastFloor.transform.position.x + width, transform.position.y + floorOffset + 0.08f), transform.rotation);
         yield return new WaitForSeconds(1);
         canSpawn = true;
     }
 
     IEnumerator SpawnPickup()
     {
-        Instantiate(pickupPrefab, new Vector2(transform.position.x, transform.position.y + floorOffset + 0.33f), transform.rotation);
+        Instantiate(pickupPrefab, new Vector2(lastFloor.transform.position.x + width, transform.position.y + floorOffset + 0.33f), transform.rotation);
         yield return new WaitForSeconds(1);
         canSpawn = true;
     }

@@ -5,17 +5,22 @@ using UnityEngine;
 [RequireComponent(typeof(SpriteRenderer))]
 public class S_PickScroll : MonoBehaviour
 {
-
+	
+	public float ChanceToSpawn;
+	
     [SerializeField] private List<Sprite> sprites;
     [SerializeField] private List<GameObject> buildings;
     [SerializeField] private GameObject buildingObj;
     [SerializeField] private float scrollSpeed;
+	
+	private GameManager gm;
     private SpriteRenderer spriteRenderer;
-    public float ChanceToSpawn;
+    
 
     // Start is called before the first frame update
     void Start()
     {
+		gm = GameObject.FindGameObjectWithTag("GameManager").GetComponent<GameManager>();
         spriteRenderer = GetComponent<SpriteRenderer>();
         if (Random.value <= ChanceToSpawn)
         {
@@ -37,7 +42,7 @@ public class S_PickScroll : MonoBehaviour
         {
             if (GameObject.FindGameObjectWithTag("Player").GetComponent<S_PlayerController>().canMove)
             {
-                transform.Translate(Vector2.left * scrollSpeed * Time.deltaTime);
+                transform.Translate(Vector2.left * scrollSpeed * gm.gameSpeed * Time.deltaTime);
             }
         }
     }
